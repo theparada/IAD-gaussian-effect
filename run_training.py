@@ -94,8 +94,8 @@ def choose_feature(X1, X2, combination=[0,1,2,3]):
 # the actual training
 if not os.path.exists('saved_model/' + args.savedir):
     os.mkdir('saved_model/' + args.savedir)
-if not os.path.exists('all_plots/' + args.savedir):
-    os.mkdir('all_plots/' + args.savedir)
+if not os.path.exists('plots/' + args.savedir):
+    os.mkdir('plots/' + args.savedir)
 print(args.savedir + " dir is created.")
 
 l1, l2, l3 = int(args.nodes[0]), int(args.nodes[1]), int(args.nodes[2])

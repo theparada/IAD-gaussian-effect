@@ -1,2 +1,9 @@
 slurm_bin/
 data/
+__pycache__/
+run_job.sh
+run_train.sh
+saved_model/
+plots/
+slurm-*
+debug.ipynb

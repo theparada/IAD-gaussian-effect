@@ -46,38 +46,43 @@ def data_reduction(x, y, data_reduc, bg_vs_bg=False, signal_vs_bg=False):
         new_y = np.reshape(new_y, (len(new_y), 1))
     return new_x, new_y
 
-def data_loader(signal_vs_bg=False, phi=False, uniform_num=0, S_over_B=""):
+def data_loader(signal_vs_bg=False, phi=False, EPiC=False, uniform_num=0, S_over_B=""):
     # y's are 190k*2 matrices where y[:, 0] and y[:, 1] are "sig vs bg" and "data vs bg" respectively
+    if EPiC:
+        input_dir = "data/X_files_EPiC/"
+    else:
+        input_dir = "data/X_files/"
+        
     if signal_vs_bg:
-        X_train = np.load("X_files/X_train_sb.npy")
-        X_val = np.load("X_files/X_val_sb.npy")
+        X_train = np.load(input_dir + "/X_train_sb.npy")
+        X_val = np.load(input_dir + "/X_val_sb.npy")
 
-        y_train = np.load("X_files/y_train_sb.npy")
-        y_val = np.load("X_files/y_val_sb.npy")
+        y_train = np.load(input_dir + "/y_train_sb.npy")
+        y_val = np.load(input_dir + "/y_val_sb.npy")
     else:
         if phi:
-            X_train = np.load("X_files/X_train_phi.npy")
-            X_val = np.load("X_files/X_val_phi.npy")
+            X_train = np.load(input_dir + "/X_train_phi.npy")
+            X_val = np.load(input_dir + "/X_val_phi.npy")
 
-            y_train = np.load("X_files/y_train_phi.npy")
-            y_val = np.load("X_files/y_val_phi.npy")
+            y_train = np.load(input_dir + "/y_train_phi.npy")
+            y_val = np.load(input_dir + "/y_val_phi.npy")
         elif uniform_num > 0:
-            X_train = np.load("X_files/X_train_uni.npy")
-            X_val = np.load("X_files/X_val_uni.npy")
+            X_train = np.load(input_dir + "/X_train_uni.npy")
+            X_val = np.load(input_dir + "/X_val_uni.npy")
 
-            y_train = np.load("X_files/y_train_uni.npy")
-            y_val = np.load("X_files/y_val_uni.npy")
+            y_train = np.load(input_dir + "/y_train_uni.npy")
+            y_val = np.load(input_dir + "/y_val_uni.npy")
         else:
-            X_train = np.load("X_files/X_train"+S_over_B+".npy")
-            X_val = np.load("X_files/X_val"+S_over_B+".npy")
+            X_train = np.load(input_dir + "/X_train"+S_over_B+".npy")
+            X_val = np.load(input_dir + "/X_val"+S_over_B+".npy")
 
-            y_train = np.load("X_files/y_train"+S_over_B+".npy")
-            y_val = np.load("X_files/y_val"+S_over_B+".npy")
+            y_train = np.load(input_dir + "/y_train"+S_over_B+".npy")
+            y_val = np.load(input_dir + "/y_val"+S_over_B+".npy")
     return X_train, X_val, y_train, y_val
 
 def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l2 = 64, l3 = 64, morelayers=False, dropout=False, hingeloss=False, use_SGD = False, momentum=0, num_model = 10, bg_vs_bg=False, signal_vs_bg=False, weight_seed=False, phi=False, data_reduc=1.0, uniform_num=0, gauss_num=0, weight_decay=0., learning_rate=1e-3, epochs=100, batch_size=128):
-    pre_X_train, y_train, _ = data_reduction(pre_X_train, y_train, data_reduc=data_reduc, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
-    X_val, y_val, _ = data_reduction(X_val, y_val, data_reduc=1.0, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
+    pre_X_train, y_train = data_reduction(pre_X_train, y_train, data_reduc=data_reduc, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
+    X_val, y_val = data_reduction(X_val, y_val, data_reduc=1.0, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
     # y_train is now 190k*1 matrix 
     # normalize datasets here because raw X_train is needed in the evaluation 
     X_train, X_val = data_process.normalize_datasets(pre_X_train, X_val, pre_X_train)
@@ -204,7 +209,7 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         plt.xlabel('epoch')
         plt.ylabel('Binary Cross Entropy Loss')
         plt.legend(loc="upper left")
-        plt.savefig('all_plots/' + save_dir + 'train_loss_value_model'+str(model_num+1)+'.png')
+        plt.savefig('plots/' + save_dir + 'train_loss_value_model'+str(model_num+1)+'.png')
         plt.close()
         print("Finish plotting loss functions.")
 
@@ -339,7 +344,7 @@ def train_per_batch(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 6
             plt.xlabel("Change of Validation Loss")
             plt.ylabel("Batches")
             plt.yscale('log')
-            plt.savefig("all_plots/loss_vs_batch_"+str(gauss_num)+"G.pdf", bbox_inches="tight")
+            plt.savefig("plots/loss_vs_batch_"+str(gauss_num)+"G.pdf", bbox_inches="tight")
         plt.close()
 
 def train_each_model(save_dir, device, pre_X_train, X_val, y_train, y_val, model_nums, l1 = 64, l2 = 64, l3 = 64, morelayers=False, dropout=False, hingeloss=False, use_SGD = False, momentum=0, num_model = 10, signal_vs_bg=False, weight_seed=False, phi=False, data_reduc=1.0, uniform_num=0, gauss_num=0, weight_decay=0., learning_rate=1e-3, epochs=100, batch_size=128):
@@ -471,6 +476,6 @@ def train_each_model(save_dir, device, pre_X_train, X_val, y_train, y_val, model
         plt.xlabel('epoch')
         plt.ylabel('Binary Cross Entropy Loss')
         plt.legend(loc="upper left")
-        plt.savefig('all_plots/' + save_dir + 'train_loss_value_model'+str(model_num+1)+'.png')
+        plt.savefig('plots/' + save_dir + 'train_loss_value_model'+str(model_num+1)+'.png')
         plt.close()
         print("Finish plotting loss functions.")
