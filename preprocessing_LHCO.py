@@ -14,7 +14,7 @@ parser.add_argument("--S_over_B", type=float, default=0.006361658645922605,
                     help="Signal over background ratio in the signal region.")
 parser.add_argument("--seed", type=int, default=1,
                     help="random seed for the mixing")
-parser.add_argument("--outdir", type=str, default="new_separated_data/",
+parser.add_argument("--outdir", type=str, default="vanilla_data/",
                     help="output directory")
 args = parser.parse_args()
 
