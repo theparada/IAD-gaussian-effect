@@ -19,10 +19,10 @@ parser.add_argument("--outdir", type=str, default="vanilla_data/",
 args = parser.parse_args()
 
 # the "data" containing too much signal
-features=pd.read_hdf("events_anomalydetection_v2.features.h5")
+features=pd.read_hdf("data/LHCO_data/events_anomalydetection_v2.features.h5")
 
 # additionally produced bkg
-features_extrabkg = pd.read_hdf("events_anomalydetection_qcd_extra_inneronly_features.h5")
+features_extrabkg = pd.read_hdf("data/LHCO_data/events_anomalydetection_qcd_extra_inneronly_features.h5")
 
 ## to be split among the different sets 
 features_extrabkg1 = features_extrabkg[:312858]
