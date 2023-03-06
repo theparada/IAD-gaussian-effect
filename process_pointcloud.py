@@ -11,10 +11,16 @@ parser = argparse.ArgumentParser(
 # use the default value
 parser.add_argument("--S_over_B", type=float, default=0.006361658645922605,
                     help="Signal over background ratio in the signal region.")
+parser.add_argument("--S_B", type=str, default="",
+                    help="Signal vs background ratio")
 parser.add_argument("--seed", type=int, default=1,
                     help="random seed for the mixing")
 parser.add_argument("--outdir", type=str, default="vanilla_data/",
                     help="output directory")
+parser.add_argument("--signal_vs_bg", action="store_true", default=False,
+                    help="train over signal vs background")
+parser.add_argument("--testset", action="store_true", default=False,
+                    help="make test set: all models are evaluated on the same test set")
 args = parser.parse_args()
 
 # load data
@@ -124,3 +130,26 @@ X_test = np.concatenate((X_test_sig, X_test_bg, extra2), axis=0)
 y_train = np.concatenate((y_train_data, y_train_bg), axis=0)
 y_val = np.concatenate((y_val_data, y_val_bg), axis=0)
 y_test = np.concatenate((y_test_sig, y_test_bg, label_extra2), axis=0)
+
+if args.testset:
+    np.save(os.path.join('data/X_files_EPiC/X_test.npy'), X_test)
+    np.save(os.path.join('data/X_files_EPiC/y_test.npy'), y_test)
+    print("Testset is generated.")
+else:
+    if args.signal_vs_bg:
+        X_train = np.concatenate((X_train, X_train_extrasig), axis=0)
+        X_val = np.concatenate((X_val, X_val_extrasig), axis=0)
+        y_train = np.concatenate((y_train, y_train_extrasig), axis=0)
+        y_val = np.concatenate((y_val, y_val_extrasig), axis=0)
+
+        np.save(os.path.join('data/X_files_EPiC/X_train_sb'+args.S_B+'.npy'), X_train)
+        np.save(os.path.join('data/X_files_EPiC/X_val_sb'+args.S_B+'.npy'), X_val)
+        np.save(os.path.join('data/X_files_EPiC/y_train_sb'+args.S_B+'.npy'), y_train)
+        np.save(os.path.join('data/X_files_EPiC/y_val_sb'+args.S_B+'.npy'), y_val)
+        print("X_files (sb) are saved.")
+    else:
+        np.save(os.path.join('data/X_files_EPiC/X_train'+args.S_B+'.npy'), X_train)
+        np.save(os.path.join('data/X_files_EPiC/X_val'+args.S_B+'.npy'), X_val)
+        np.save(os.path.join('data/X_files_EPiC/y_train'+args.S_B+'.npy'), y_train)
+        np.save(os.path.join('data/X_files_EPiC/y_val'+args.S_B+'.npy'), y_val)
+        print("X_files are saved.")
