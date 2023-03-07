@@ -25,17 +25,9 @@ class PointCloudDataset_ZeroPadded(Dataset):
         return mean_list, std_list
 
     def __getitem__(self, idx):
-
         X = self.data[idx]   # 200, 4 (initially)
         y = self.labels[idx]   # 1
-        
-        # nPoints
-        # n = self.get_n_points(X, axis=-1).reshape(1,)
-        
-        return {'X' : X,
-                'y' : y,
-                # 'n' : n,
-                }
+        return X, y
 
     def __len__(self):
         return len(self.labels)

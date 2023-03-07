@@ -6,7 +6,7 @@
 #SBATCH --partition=maxgpu             ## or allgpu / cms / cms-uhh / maxgpu
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name retrain1G           # give job unique name
+#SBATCH --job-name epicsb           # give job unique name
 #SBATCH --output slurm_bin/train3.out      # terminal output
 #SBATCH --error slurm_bin/train3.err
 #SBATCH --mail-type END
@@ -39,8 +39,7 @@ conda activate idealized
 cd /beegfs/desy/user/prangchp/IAD-gaussian-effect/
 
 # run
-python run_training.py --savedir 10G_signal_vs_bg/ --signal_vs_bg --gaussian 10
-python run_training.py --savedir 10G/ --gaussian 10
+python run_training.py --savedir EPiC/ --use_EPiC --signal_vs_bg --learning_rate 1e-2
 # python model_training.py --savedir "1G_250/" --S_over_B "250" --gaussian 1 --data_reduc 1.0
 # python model_training.py --savedir "1G_250080/" --S_over_B "250" --gaussian 1 --data_reduc 0.8 
 # python model_training.py --savedir "1G_250050/" --S_over_B "250" --gaussian 1 --data_reduc 0.5 

@@ -18,6 +18,8 @@ parser.add_argument("--S_over_B", type=str, default="",
                     help="Signal vs background ratio")
 parser.add_argument("--train_each_model", action="store_true", default=False,
                     help="retraining collapsed models")
+parser.add_argument("--use_EPiC", action="store_true", default=False,
+                    help="training with EPiC architecture")
 parser.add_argument("--model_nums", action="store", type=str, nargs='*', default=["0", "1", "2", "3"],
                     help="model numbers for retraining, used when --train_each_model is activated")
 parser.add_argument("--loss_per_batch", action="store_true", default=False,
@@ -101,7 +103,7 @@ print(args.savedir + " dir is created.")
 l1, l2, l3 = int(args.nodes[0]), int(args.nodes[1]), int(args.nodes[2])
 print("Training with " "l1, l2, l3: " + str(args.nodes) + ".")
 
-X_train, X_val, y_train, y_val = model_training.data_loader(signal_vs_bg=args.signal_vs_bg, phi=args.phi, uniform_num=args.uniform, S_over_B=args.S_over_B)
+X_train, X_val, y_train, y_val = model_training.data_loader(signal_vs_bg=args.signal_vs_bg, use_EPiC=args.use_EPiC, phi=args.phi, uniform_num=args.uniform, S_over_B=args.S_over_B)
 
 if args.choose_features:
     print("Feature ranking study")
@@ -127,4 +129,4 @@ elif args.train_each_model:
         collect_model_num.append(int(model_num))
     model_training.train_each_model(args.savedir, device, X_train, X_val, y_train, y_val, model_nums=collect_model_num, l1=l1, l2=l2, l3=l3, use_SGD=args.sgd, momentum=args.momentum, weight_seed=args.weight_seed, morelayers=args.morelayers, hingeloss=args.hingeloss, dropout=args.dropout, num_model=args.num_model, bg_vs_bg=args.bg_vs_bg, signal_vs_bg=args.signal_vs_bg, data_reduc=args.data_reduc, phi=args.phi, gauss_num=args.gaussian, uniform_num=args.uniform, learning_rate=learning_rate, weight_decay=args.weight_decay, epochs=epochs, batch_size=batch_size)
 else:
-    model_training.train_model(args.savedir, device, X_train, X_val, y_train, y_val, l1=l1, l2=l2, l3=l3, use_SGD=args.sgd, momentum=args.momentum, weight_seed=args.weight_seed, morelayers=args.morelayers, hingeloss=args.hingeloss, dropout=args.dropout, num_model=args.num_model, bg_vs_bg=args.bg_vs_bg, signal_vs_bg=args.signal_vs_bg, data_reduc=args.data_reduc, phi=args.phi, gauss_num=args.gaussian, uniform_num=args.uniform, learning_rate=learning_rate, weight_decay=args.weight_decay, epochs=epochs, batch_size=batch_size)
+    model_training.train_model(args.savedir, device, X_train, X_val, y_train, y_val, l1=l1, l2=l2, l3=l3, use_EPiC=args.use_EPiC, use_SGD=args.sgd, momentum=args.momentum, weight_seed=args.weight_seed, morelayers=args.morelayers, hingeloss=args.hingeloss, dropout=args.dropout, num_model=args.num_model, bg_vs_bg=args.bg_vs_bg, signal_vs_bg=args.signal_vs_bg, data_reduc=args.data_reduc, phi=args.phi, gauss_num=args.gaussian, uniform_num=args.uniform, learning_rate=learning_rate, weight_decay=args.weight_decay, epochs=epochs, batch_size=batch_size)

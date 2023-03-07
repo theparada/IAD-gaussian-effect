@@ -88,5 +88,5 @@ class EPiC_discriminator_mask(nn.Module):
         x = F.leaky_relu(self.fc_g3(x))
         x = F.leaky_relu(self.fc_g4(x) + x)
         x = self.fc_g5(x)
-        x = torch.nn.sigmoid(x)
+        x = torch.sigmoid(x)
         return x

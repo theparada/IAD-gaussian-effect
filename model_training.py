@@ -3,12 +3,13 @@ from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 import numpy as np
 import os
-import argparse
 import math
 import matplotlib.pyplot as plt
 import sklearn
 import define_model
 import data_process
+import pointcloud_loader
+import EPiC_models
 
 def data_reduction(x, y, data_reduc, bg_vs_bg=False, signal_vs_bg=False):
     x_sig = []
@@ -31,10 +32,6 @@ def data_reduction(x, y, data_reduc, bg_vs_bg=False, signal_vs_bg=False):
             else:
                 y_bg.append(y[count, 1])
             count += 1
-    np.stack(x_sig)
-    np.stack(x_bg)
-    np.stack(y_sig)
-    np.stack(y_bg)
     if bg_vs_bg:
         # for bk (data) vs bg (bg) task
         new_x = np.array(x_bg[:round(data_reduc*len(x_bg))])
@@ -46,9 +43,9 @@ def data_reduction(x, y, data_reduc, bg_vs_bg=False, signal_vs_bg=False):
         new_y = np.reshape(new_y, (len(new_y), 1))
     return new_x, new_y
 
-def data_loader(signal_vs_bg=False, phi=False, EPiC=False, uniform_num=0, S_over_B=""):
+def data_loader(signal_vs_bg=False, phi=False, use_EPiC=False, uniform_num=0, S_over_B=""):
     # y's are 190k*2 matrices where y[:, 0] and y[:, 1] are "sig vs bg" and "data vs bg" respectively
-    if EPiC:
+    if use_EPiC:
         input_dir = "data/X_files_EPiC/"
     else:
         input_dir = "data/X_files/"
@@ -80,12 +77,16 @@ def data_loader(signal_vs_bg=False, phi=False, EPiC=False, uniform_num=0, S_over
             y_val = np.load(input_dir + "/y_val"+S_over_B+".npy")
     return X_train, X_val, y_train, y_val
 
-def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l2 = 64, l3 = 64, morelayers=False, dropout=False, hingeloss=False, use_SGD = False, momentum=0, num_model = 10, bg_vs_bg=False, signal_vs_bg=False, weight_seed=False, phi=False, data_reduc=1.0, uniform_num=0, gauss_num=0, weight_decay=0., learning_rate=1e-3, epochs=100, batch_size=128):
+def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l2 = 64, l3 = 64, use_EPiC=False, morelayers=False, dropout=False, hingeloss=False, use_SGD = False, momentum=0, num_model = 10, bg_vs_bg=False, signal_vs_bg=False, weight_seed=False, phi=False, data_reduc=1.0, uniform_num=0, gauss_num=0, weight_decay=0., learning_rate=1e-3, epochs=100, batch_size=128):
     pre_X_train, y_train = data_reduction(pre_X_train, y_train, data_reduc=data_reduc, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
     X_val, y_val = data_reduction(X_val, y_val, data_reduc=1.0, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
     # y_train is now 190k*1 matrix 
     # normalize datasets here because raw X_train is needed in the evaluation 
-    X_train, X_val = data_process.normalize_datasets(pre_X_train, X_val, pre_X_train)
+    if use_EPiC:
+        X_train = data_process.data_normalize_EPiC(pre_X_train, pre_X_train)
+        X_val = data_process.data_normalize_EPiC(X_val, pre_X_train)
+    else:    
+        X_train, X_val = data_process.normalize_datasets(pre_X_train, X_val, pre_X_train)
     print("X_train and X_val are normalized.")
 
     # Class weight
@@ -108,6 +109,9 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
     elif uniform_num>0:
         X_train = torch.from_numpy(X_train[:, :4 + uniform_num]).float().to(device)
         X_val = torch.from_numpy(X_val[:, :4 + uniform_num]).float().to(device)
+    elif use_EPiC:
+        X_train = torch.from_numpy(X_train[:, :, :4 + gauss_num]).float().to(device)
+        X_val = torch.from_numpy(X_val[:, :, :4 + gauss_num]).float().to(device)
     else:
         X_train = torch.from_numpy(X_train[:, :4 + gauss_num]).float().to(device)
         X_val = torch.from_numpy(X_val[:, :4 + gauss_num]).float().to(device)
@@ -116,16 +120,23 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
     y_val = torch.from_numpy(y_val).float().to(device)
 
     # count number of inputs
-    input_number = len(X_train[0])
-    print("Input Number is " + str(input_number) + " nodes.")
+    # and prepare Dataset
+    if use_EPiC:
+        input_number = len(X_train[0,0])
+        train_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_train, y_train)
+        val_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_val, y_val)
+        batch_val = batch_size
+    else:
+        input_number = len(X_train[0])
+        train_data = data_process.MakeASet(X_train, y_train)
+        val_data = data_process.MakeASet(X_val, y_val)
+        batch_val = len(val_data)
 
-    # prepare Dataset
-    train_data = data_process.MakeASet(X_train, y_train)
-    val_data = data_process.MakeASet(X_val, y_val)
+    print("using " + str(input_number) + " features.")
 
     # make DataLoader
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(dataset=val_data, batch_size=len(val_data), shuffle=True)
+    val_loader = DataLoader(dataset=val_data, batch_size=batch_val, shuffle=True)
 
     for model_num in range(num_model):
         print(f"Model {model_num+1}\n-------------------------------")
@@ -137,6 +148,8 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
             model = define_model.NeuralNetworkDropout(input_number, l1, l2, l3).to(device)
         elif morelayers:
             model = define_model.NeuralNetworkMoreLayers(input_number, nodes=l1).to(device)
+        elif use_EPiC:
+            model = EPiC_models.EPiC_discriminator_mask(input_number).to(device)
         else:    
             model = define_model.NeuralNetwork(input_number, l1, l2, l3).to(device)
        
@@ -152,18 +165,25 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
 
         # these change with data reduction
         size_train = len(train_loader.dataset) 
-        n_batch = math.ceil(size_train/batch_size)
+        n_batch_train = math.ceil(size_train/batch_size)
+        size_val = len(val_loader.dataset) 
+        n_batch_val = math.ceil(size_val/batch_val)
 
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
             
             model.train()
-            train_loss, val_loss, train_loss_mean = 0, 0, 0
+            train_loss, train_loss_mean = 0, 0
 
             # training
             for batch, (X, y) in enumerate(train_loader):
                 # Compute prediction error
-                pred = model(X)
+                if use_EPiC:
+                    mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
+                    mask = mask.reshape(mask.shape[0], mask.shape[1], 1)   # [B,N,1] 
+                    pred = model(X, mask)
+                else:
+                    pred = model(X)
                 train_loss = loss_fn(pred, y)
                 train_loss_mean += train_loss.mean().item()
 
@@ -171,30 +191,27 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
                 optimizer.zero_grad()
                 train_loss.backward()
                 optimizer.step()
-                
-                # train_correct = (pred.round() == y).sum().item()/batch_size
 
-            print(f"Training loss: {train_loss_mean/n_batch:>7f}")
+            print(f"Training loss: {train_loss_mean/n_batch_train:>7f}")
 
-            train_loss_coll.append(train_loss_mean/n_batch)
+            train_loss_coll.append(train_loss_mean/n_batch_train)
 
             # validation
             model.eval()
-            # val_loss_mean = 0
+            val_loss, val_loss_mean = 0, 0
             with torch.no_grad():
                 for batch, (X, y) in enumerate(val_loader):
-                    val_pred = model(X)
+                    if use_EPiC:
+                        mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
+                        mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
+                        val_pred = model(X, mask)
+                    else: 
+                        val_pred = model(X)
                     val_loss = loss_fn(val_pred, y)
-                    # val_loss_mean += val_loss.mean().item()
-                    # val_correct = (val_pred.round() == y).sum().item()
-                    # val_correct /= len(X)
+                    val_loss_mean += val_loss.mean().item()
 
-            # val_correct = val_correct/math.ceil(len(X_val)/batch_size)
-            # val_loss_mean = val_loss_mean/math.ceil(len(X_val)/batch_size)
-            print(f"Validation loss: {val_loss:>8f} \n")
-
-            val_loss_coll.append(val_loss.item())
-            # val_corr_coll.append(val_correct)
+            print(f"Validation loss: {val_loss_mean/n_batch_val:>8f} \n")
+            val_loss_coll.append(val_loss_mean/n_batch_val)
 
             # save model each epoch
             np.save(os.path.join('saved_model/' + save_dir, "train_losses_model_"+str(model_num+1)+".npy"), train_loss_coll)
