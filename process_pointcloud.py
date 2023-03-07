@@ -43,8 +43,8 @@ def prepare_jets(data, mjjmin=3.3, mjjmax=3.7):
     # mjj = np.resize(mjj, (len(mjj), 1))
 
     # reshape to (, 200 , 3) 
-    prejet1 = np.resize(prejet1, (len(prejet1), 200, 3))
-    prejet2 = np.resize(prejet2, (len(prejet2), 200, 3))
+    prejet1 = np.resize(prejet1, (len(prejet1), 100, 3))
+    prejet2 = np.resize(prejet2, (len(prejet2), 100, 3))
 
     # sort jets
     for i in range(len(prejet1)):
@@ -55,8 +55,8 @@ def prepare_jets(data, mjjmin=3.3, mjjmax=3.7):
             prejet2[i] = hold
 
     # make jet labels
-    jet1 = np.concatenate((prejet1, np.zeros((len(prejet1), 200, 1))), axis = 2)    
-    jet2 = np.concatenate((prejet2, np.ones((len(prejet2), 200, 1))), axis = 2)
+    jet1 = np.concatenate((prejet1, np.zeros((len(prejet1), 100, 1))), axis = 2)    
+    jet2 = np.concatenate((prejet2, np.ones((len(prejet2), 100, 1))), axis = 2)
     
     full_events = np.concatenate((jet1, jet2), axis=1)
 
@@ -73,11 +73,20 @@ def combine_data(data1, data2):
     label = np.concatenate((y1, y2), axis=0)
     return features, label
 
+def data_label(y, is_data=True):
+    y = np.resize(y, (len(y), 1))
+    if is_data:
+        y = np.concatenate((y, np.ones((len(y), 1))), axis=1)
+    else:
+        y = np.concatenate((y, np.zeros((len(y), 1))), axis=1)
+    return y
+
 # prepare to make datasets
 sig, label_sig = combine_data(s_sr, s_br)
 bkg, label_bkg = combine_data(b_sr, b_br)
 extra1, label_extra1 = prepare_jets(ex_bg1)
 extra2, label_extra2 = prepare_jets(ex_bg2)
+print(np.shape(sig))
 
 # determine sig in S/B
 n_sig = int(args.S_over_B*len(sig))
@@ -93,8 +102,12 @@ label_all = label_all[indices_all]
 
 X_train_data = data_all[:60000]
 X_val_data = data_all[60000:120000]
+
+# all y_train and y_val have 2 entries [sig vs bg, data vs bg] event for the sig vs bg task
 y_train_data = label_all[:60000]
+y_train_data = data_label(y_train_data, is_data=True)
 y_val_data = label_all[60000:120000]
+y_val_data = data_label(y_val_data, is_data=True)
 
 # test signals
 n_sig_test = 20000
@@ -106,8 +119,12 @@ n_extrasig_train =  (sig.shape[0]-n_sig_test)//2
 
 X_train_extrasig = sig[n_sig_test:n_sig_test+n_extrasig_train]
 X_val_extrasig = sig[n_sig_test+n_extrasig_train:]
+
+# extra sig is labeled as data
 y_train_extrasig = label_sig[n_sig_test:n_sig_test+n_extrasig_train]
+y_train_extrasig = data_label(y_train_extrasig, is_data=True)
 y_val_extrasig = label_sig[n_sig_test+n_extrasig_train:]
+y_val_extrasig = data_label(y_val_extrasig, is_data=True)
 
 # splitting extra bkg (1) into train, val and test set
 n_bkg_test = 40000
@@ -119,8 +136,11 @@ n_extrabkg_train =  (extra1.shape[0]-n_bkg_test)//2
 
 X_train_bg = extra1[n_bkg_test:n_bkg_test+n_extrabkg_train]
 X_val_bg = extra1[n_bkg_test+n_extrabkg_train:]
+
 y_train_bg = label_extra1[n_bkg_test:n_bkg_test+n_extrabkg_train]
+y_train_bg = data_label(y_train_bg, is_data=False)
 y_val_bg = label_extra1[n_bkg_test+n_extrabkg_train:]
+y_val_bg = data_label(y_val_bg, is_data=False)
 
 # ready to use datasets
 X_train = np.concatenate((X_train_data, X_train_bg), axis=0)
@@ -130,6 +150,9 @@ X_test = np.concatenate((X_test_sig, X_test_bg, extra2), axis=0)
 y_train = np.concatenate((y_train_data, y_train_bg), axis=0)
 y_val = np.concatenate((y_val_data, y_val_bg), axis=0)
 y_test = np.concatenate((y_test_sig, y_test_bg, label_extra2), axis=0)
+
+print(np.shape(X_train))
+print(np.shape(y_train))
 
 if args.testset:
     np.save(os.path.join('data/X_files_EPiC/X_test.npy'), X_test)
