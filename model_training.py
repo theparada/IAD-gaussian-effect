@@ -83,10 +83,10 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
     # y_train is now 190k*1 matrix 
     # normalize datasets here because raw X_train is needed in the evaluation 
     if use_EPiC:
-        X_train = data_process.data_normalize_EPiC(pre_X_train, pre_X_train)
         X_val = data_process.data_normalize_EPiC(X_val, pre_X_train)
+        X_train = data_process.data_normalize_EPiC(pre_X_train, pre_X_train)
     else:    
-        X_train, X_val = data_process.normalize_datasets(pre_X_train, X_val, pre_X_train)
+        X_val, X_train = data_process.normalize_datasets(X_val, pre_X_train, pre_X_train)
     print("X_train and X_val are normalized.")
 
     # Class weight
@@ -101,7 +101,7 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         y_val[y_val==0]=-1
     else:
         loss_fn = define_model.BCELoss_class_weighted(class_weights)
-
+        # loss_fn = torch.nn.BCEWithLogitsLoss()
     # define X, y
     if phi:
         X_train = torch.from_numpy(X_train[:, :5]).float().to(device)
@@ -110,8 +110,8 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         X_train = torch.from_numpy(X_train[:, :4 + uniform_num]).float().to(device)
         X_val = torch.from_numpy(X_val[:, :4 + uniform_num]).float().to(device)
     elif use_EPiC:
-        X_train = torch.from_numpy(X_train[:, :, :4 + gauss_num]).float().to(device)
-        X_val = torch.from_numpy(X_val[:, :, :4 + gauss_num]).float().to(device)
+        X_train = torch.from_numpy(X_train).float().to(device)
+        X_val = torch.from_numpy(X_val).float().to(device)
     else:
         X_train = torch.from_numpy(X_train[:, :4 + gauss_num]).float().to(device)
         X_val = torch.from_numpy(X_val[:, :4 + gauss_num]).float().to(device)
@@ -125,18 +125,16 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         input_number = len(X_train[0,0])
         train_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_train, y_train)
         val_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_val, y_val)
-        batch_val = batch_size
     else:
         input_number = len(X_train[0])
         train_data = data_process.MakeASet(X_train, y_train)
         val_data = data_process.MakeASet(X_val, y_val)
-        batch_val = len(val_data)
 
     print("using " + str(input_number) + " features.")
 
     # make DataLoader
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(dataset=val_data, batch_size=batch_val, shuffle=True)
+    val_loader = DataLoader(dataset=val_data, batch_size=batch_size, shuffle=True)
 
     for model_num in range(num_model):
         print(f"Model {model_num+1}\n-------------------------------")
@@ -167,7 +165,7 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         size_train = len(train_loader.dataset) 
         n_batch_train = math.ceil(size_train/batch_size)
         size_val = len(val_loader.dataset) 
-        n_batch_val = math.ceil(size_val/batch_val)
+        n_batch_val = math.ceil(size_val/batch_size)
 
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")

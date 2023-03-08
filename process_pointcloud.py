@@ -86,7 +86,6 @@ sig, label_sig = combine_data(s_sr, s_br)
 bkg, label_bkg = combine_data(b_sr, b_br)
 extra1, label_extra1 = prepare_jets(ex_bg1)
 extra2, label_extra2 = prepare_jets(ex_bg2)
-print(np.shape(sig))
 
 # determine sig in S/B
 n_sig = int(args.S_over_B*len(sig))
