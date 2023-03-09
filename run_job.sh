@@ -39,9 +39,10 @@ conda activate cathode
 cd /beegfs/desy/user/prangchp/repeat_manuel
 
 # run
-python process_pointcloud.py
-python process_pointcloud.py --signal_vs_bg
-python process_pointcloud.py --testset
+python run_evaluation.py
+# python process_pointcloud.py
+# python process_pointcloud.py --signal_vs_bg
+# python process_pointcloud.py --testset
 # python data_generator.py --input_dir "new_separated_data/" --gaussian 10 --testset
 # python data_generator.py --input_dir "data_SB_006/" --S_over_B "006" --gaussian 10
 # python data_generator.py --input_dir "data_SB_007/" --S_over_B "007" --gaussian 10

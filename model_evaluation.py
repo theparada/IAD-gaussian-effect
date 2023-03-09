@@ -1,23 +1,17 @@
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-import sys
-# import os
-import argparse
 import math
 import matplotlib.pyplot as plt
 import sklearn
 from sklearn.metrics import roc_curve, auc
-# from sklearn.metrics import roc_auc_score, plot_roc_curve
 import define_model
-# from torch.optim import Adam
 from plot_utils import compute_median_and_variance_roc_sic
-from plot_utils import roc_curve as roc
-from matplotlib import cm
-from scipy.interpolate import interp1d
 import data_process
 import random
 import model_training
+import pointcloud_loader
+import EPiC_models
 
 # choose the best 10 epochs
 def choose_ten_best(x):
@@ -61,33 +55,42 @@ def data_vs_bg_label(x, y, sig_num=369):
     new_y = np.concatenate((y_data, y_bg), axis=0)
     return new_x, new_y
 
-def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, gauss_num=0, S_over_B="", data_reduc=1.0, signal_vs_bg=False, hingeloss=False, uniform_num=0, phi=False, duplicate_feature=0, dropout=False, morelayers=False, label="default", linestyle="-", color="black", with_random=False, fpr_cutoff=0.000052777777778):
+def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, use_EPiC=False, gauss_num=0, S_over_B="", data_reduc=1.0, signal_vs_bg=False, hingeloss=False, uniform_num=0, phi=False, duplicate_feature=0, dropout=False, morelayers=False, label="default", linestyle="-", color="black", with_random=False, batch_size=128, fpr_cutoff=0.000052777777778):
     print("From " + dir)
     # define parameters
+    if use_EPiC:
+        input_dir = "data/X_files_EPiC/"
+    else:
+        input_dir = "data/X_files/"
+    
     if phi:
-        X_test = np.load("X_files/X_test_phi.npy")
-        y_test = np.load("X_files/y_test_phi.npy")
+        X_test = np.load(input_dir + "X_test_phi.npy")
+        y_test = np.load(input_dir + "y_test_phi.npy")
     elif uniform_num>0:
-        X_test = np.load("X_files/X_test_uni.npy")
-        y_test = np.load("X_files/y_test_uni.npy")
+        X_test = np.load(input_dir + "X_test_uni.npy")
+        y_test = np.load(input_dir + "y_test_uni.npy")
         X_test = X_test[:, :4 + uniform_num]
     else:
         if signal_vs_bg:
-            X_train = np.load("X_files/X_train_sb"+S_over_B+".npy")
-            y_train = np.load("X_files/y_train_sb"+S_over_B+".npy")
+            X_train = np.load(input_dir + "X_train_sb"+S_over_B+".npy")
+            y_train = np.load(input_dir + "y_train_sb"+S_over_B+".npy")
             sig_num = count_sig(y_train)
             print("Fully supervised")
         else:
-            X_train = np.load("X_files/X_train"+S_over_B+".npy")
-            y_train = np.load("X_files/y_train"+S_over_B+".npy")
+            X_train = np.load(input_dir + "X_train"+S_over_B+".npy")
+            y_train = np.load(input_dir + "y_train"+S_over_B+".npy")
             sig_num = count_sig(y_train)
             print("Idealized AD")
         
         X_train, y_train = model_training.data_reduction(X_train, y_train, data_reduc=data_reduc, bg_vs_bg=False, signal_vs_bg=signal_vs_bg)
-        pre_X_test = np.load("X_files/X_test.npy")
-        y_test = np.load("X_files/y_test.npy")
-        X_test = data_process.data_normalize(pre_X_test, X_train)
-        X_test = X_test[:, :4 + gauss_num]
+        X_test = np.load(input_dir + "X_test.npy")
+        y_test = np.load(input_dir + "y_test.npy")
+        if use_EPiC:
+            X_test = data_process.data_normalize_EPiC(X_test, X_train)
+            X_test = X_test[:, :, :4 + gauss_num]
+        else:
+            X_test = data_process.data_normalize(X_test, X_train)
+            X_test = X_test[:, :4 + gauss_num]
     
     if duplicate_feature>0:
         X_test = data_process.duplicate_feature(x=X_test, input_num=duplicate_feature)
@@ -108,6 +111,21 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, gauss_num=0, S_over_
     X_db = torch.from_numpy(X_db).float().to(device)
     y_db = torch.from_numpy(y_db).float().to(device)
 
+    # count number of inputs
+    # and prepare Dataset
+    if use_EPiC:
+        input_number = len(X_train[0,0])
+        test_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_test, y_test)
+        db_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_db, y_db)
+    else:
+        input_number = len(X_train[0])
+        test_data = data_process.MakeASet(X_test, y_test)
+        db_data = data_process.MakeASet(X_db, y_db)
+    
+    # make DataLoader
+    test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
+    db_loader = DataLoader(dataset=db_data, batch_size=batch_size, shuffle=True)
+
     tprs_list = []
     fprs_list = []
     auc_list = []
@@ -121,6 +139,7 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, gauss_num=0, S_over_
 
     input_number = len(X_test[0])
 
+    # 10 models
     for model_num in range(10):
         print(f"Model {model_num+1}")
         # defining new NN every change of model
@@ -128,6 +147,8 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, gauss_num=0, S_over_
             model = define_model.NeuralNetworkDropout(input_number).to(device)
         elif morelayers:
             model = define_model.NeuralNetworkMoreLayers(input_number).to(device)
+        elif use_EPiC:
+            model = EPiC_models.EPiC_discriminator_mask(input_number).to(device)
         else:
             model = define_model.NeuralNetwork(input_number, l1, l2, l3).to(device)
 
@@ -147,25 +168,48 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, gauss_num=0, S_over_
 
         collect_val.append(np.mean(val_list))
 
+        # size_test = len(test_loader.dataset) 
+        # n_batch_test = math.ceil(size_test/batch_size)
+        size_db = len(db_loader.dataset) 
+        n_batch_db = math.ceil(size_db/batch_size)
+
+        # 10 epochs
         for i in model_number:
             model.load_state_dict(torch.load("saved_model/"+dir+"saved_training_model"+str(model_num+1)+'_epoch'+str(i+1)+".pt"))
 
             # Evaluation
             model.eval()
             test_pred = []
-            test_loss, test_correct = 0, 0
+            test_loss, test_loss_mean = 0, 0
             with torch.no_grad():
                 # signal vs bg
-                test_pred = model(X_test) # model() return probability [0,1]
+                for batch, (X, y) in enumerate(test_loader):
+                    if use_EPiC:
+                        mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
+                        mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
+                        test_pred = model(X, mask)
+                    else: 
+                        test_pred = model(X)
+                    collect_pred.append(test_pred.cpu().numpy())
 
                 # data vs bg
-                db_pred = model(X_db)
-                test_loss = loss_fn(db_pred, y_db)
-            collect_loss.append(test_loss.cpu().item())
-            collect_pred.append(test_pred.cpu().numpy())
+                for batch, (X, y) in enumerate(db_loader):
+                    if use_EPiC:
+                        mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
+                        mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
+                        db_pred = model(X, mask)
+                    else: 
+                        db_pred = model(X)
+                    test_loss = loss_fn(db_pred, y)
+                    test_loss_mean += test_loss.mean().item()
+
+            collect_loss.append(test_loss_mean/n_batch_db)
         
-        mean_loss.append(np.mean(collect_loss, axis = 0))
+        mean_loss.append(np.mean(collect_loss))
+        collect_pred = np.vstack(collect_pred)
+        collect_pred = np.resize(collect_pred, (10, len(y_test), 1))
         collect_pred = np.mean(collect_pred, axis = 0)
+        print(np.unique(collect_pred))
 
         fpr, tpr, _ = roc_curve(y_test.cpu(), collect_pred)
                     

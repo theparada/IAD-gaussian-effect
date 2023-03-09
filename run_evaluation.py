@@ -25,7 +25,7 @@ print("Using {} device".format(device))
 learning_rate = args.learning_rate
 
 
-# methods = [("default", "Vanilla", 0), ("one_gauss", "1G", 1), ("two_gauss", "2G", 2), ("three_gauss", "3G", 3), ("five_gauss", "5G", 5), ("seven_gauss", "7G", 7), ("ten_gauss", "10G", 10)]
+methods = [("baseline", "Baseline", 0)]#, ("1G", "1G", 1), ("2G", "2G", 2), ("3G", "3G", 3), ("5G", "5G", 5), ("7G", "7G", 7), ("10G", "10G", 10)]
 # methods = [("default_16nodes", "16 nodes", 16, 0), ("default_32nodes", "32 nodes", 32, 0), ("default", "64 nodes", 64, 0), ("default_128nodes", "128 nodes", 128, 0), ("default_256nodes", "256 nodes", 256, 0), ("default_512nodes", "512 nodes", 512, 0), ("default_1024nodes", "1024 nodes", 1024, 0)]
 # methods = [("1G_16nodes", "16 nodes", 16, 1), ("1G_32nodes", "32 nodes", 32, 1), ("one_gauss","64 nodes", 64, 1), ("1G_128nodes", "128 nodes", 128, 1), ("1G_256nodes", "256 nodes", 256, 1)]
 # methods = [("2G_16nodes", "16 nodes", 16, 2), ("2G_32nodes", "32 nodes", 32, 2), ("two_gauss", "64 nodes", 64, 2),
@@ -44,23 +44,15 @@ learning_rate = args.learning_rate
 #            ("two_gauss", "2G", 2), ("2G_sgd", "2G SGD", 2), ("2G_sgd_momentum", "2G SGD with momentum", 2)]
 # methods = [("006", "0.6% S/B", 1), ("007", "0.7% S/B", 1), ("009", "0.9% S/B", 1), ("015", "1.5% S/B", 1), ("020", "2.0% S/B", 1),
 #            ("030", "3.0% S/B", 1), ("040", "4.0% S/B", 1), ("050", "5.0% S/B", 1), ("100", "10.0% S/B", 1), ("150", "15.0% S/B", 1), ("250", "25.0% S/B", 1)]
-methods = [("two_gauss", "2G", 2, 64), ("2G_2e-3lr_512nodes", "2G 2e-3 lr 512 nodes", 2, 512), ("2Gcombobg_vs_bg", "2G 2e-3 lr 512 nodes BG", 2, 512)]
+# methods = [("two_gauss", "2G", 2, 64), ("2G_2e-3lr_512nodes", "2G 2e-3 lr 512 nodes", 2, 512), ("2Gcombobg_vs_bg", "2G 2e-3 lr 512 nodes BG", 2, 512)]
 
 # normal plot
 colors = cm.viridis(np.linspace(0., 0.95, len(methods)))
 
 plt.figure(figsize=(8, 6))
 
-# model_evaluation.evaluate_tpr_fpr(device,"default/", gauss_num = 0, label = "Vanilla", color = "black")
-# evaluate_tpr_fpr("phi_j1/", phi=True, label = "$\phi_{J_1}$", color = "maroon")
-# evaluate_tpr_fpr("1U/", uniform_num=1, label="1U", color="orange")
-# model_evaluation.evaluate_tpr_fpr(device,"one_gauss/", gauss_num = 1, label = "1G", color = "orange")
-# model_evaluation.evaluate_tpr_fpr(device, "0G_2e-3lr_512nodes/",l1=512,l2=512,l3=512, gauss_num=0, label="0G combo", color = "blue")
-
-# evaluate_tpr_fpr("1G_l2/", gauss_num=1, label="1G L2", color="black")
-# evaluate_tpr_fpr("2G_l2/", gauss_num=2, label="2G L2", color="maroon")
-# evaluate_tpr_fpr("1G_tune_L2_en10/", l1=39, l2=68, l3=101, gauss_num=1, label="1G tune L2 ensembling", color="orange")
-# evaluate_tpr_fpr("2G_tune_L2_en10/", l1=52, l2=110, l3=227, gauss_num=2, label="2G tune L2 ensembling", color=colors[1], with_random=True)
+model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, label = "Baseline", color = "black")
+model_evaluation.evaluate_tpr_fpr(device,"EPiC/", gauss_num = 0, use_EPiC=True, label = "EPiC", color = "green")
 
 # model_evaluation.evaluate_tpr_fpr(device, "default_signal_vs_bg_hingeloss/", gauss_num=0, signal_vs_bg=True, hingeloss=True, label="0G fully supervised", color = "black")
 # model_evaluation.evaluate_tpr_fpr(device, "2G_signal_vs_bg_hingeloss/", gauss_num=2, hingeloss=True, signal_vs_bg=True, label="2G fully supervised", color = "orange")
@@ -75,21 +67,22 @@ plt.figure(figsize=(8, 6))
 
 # model_evaluation.evaluate_tpr_fpr(device, "2G_16batch_2e-3lr_512nodes/", l1=512,l2=512,l3=512, gauss_num=2, label="2G batch 16, 2e-3LR, 512 nodes", color = "blue", with_random=True)
 
-count = 0
-for method, label, gauss, node in methods:
-    dir = method + "/"
-    # gauss = 2
-    signal_vs_bg = False
-    with_random = False
-    l1 = node
-    l2 = node
-    l3 = node
-    if count == len(methods)-1:
-        with_random = True
-    model_evaluation.evaluate_tpr_fpr(device, dir, l1=l1, l2=l2,l3=l3, gauss_num = gauss, label = label, signal_vs_bg=signal_vs_bg, color = colors[count], with_random=with_random)
-    count += 1
+# count = 0
+# for method, label, gauss in methods:
+#     node = 64
+#     dir = method + "/"
+#     # gauss = 2
+#     signal_vs_bg = False
+#     with_random = False
+#     l1 = node
+#     l2 = node
+#     l3 = node
+#     if count == len(methods)-1:
+#         with_random = True
+#     model_evaluation.evaluate_tpr_fpr(device, dir, l1=l1, l2=l2,l3=l3, gauss_num = gauss, label = label, signal_vs_bg=signal_vs_bg, color = colors[count], with_random=with_random)
+#     count += 1
 plt.subplots_adjust(right=2.0)
-plt.savefig("all_plots/roc_sic_default_2G.pdf", bbox_inches="tight")
+plt.savefig("plots/results/roc_sic_epic.pdf", bbox_inches="tight")
 plt.close()
 
 # different S/B

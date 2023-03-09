@@ -39,7 +39,7 @@ conda activate idealized
 cd /beegfs/desy/user/prangchp/IAD-gaussian-effect/
 
 # run
-python run_training.py --savedir EPiC_signal_vs_bg/ --use_EPiC --signal_vs_bg --learning_rate 1e-4
+python run_training.py --savedir EPiC_signal_vs_bg/ --use_EPiC --signal_vs_bg --epochs 150 --learning_rate 1e-4
 # python model_training.py --savedir "1G_250/" --S_over_B "250" --gaussian 1 --data_reduc 1.0
 # python model_training.py --savedir "1G_250080/" --S_over_B "250" --gaussian 1 --data_reduc 0.8 
 # python model_training.py --savedir "1G_250050/" --S_over_B "250" --gaussian 1 --data_reduc 0.5 
