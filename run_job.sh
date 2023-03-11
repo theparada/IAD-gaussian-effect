@@ -33,10 +33,10 @@ source ~/.bashrc
 #module load anaconda/3
 
 # activate your conda environment the job should use
-conda activate cathode
+conda activate idealized
 
 # go to your folder with your python scripts
-cd /beegfs/desy/user/prangchp/repeat_manuel
+cd /beegfs/desy/user/prangchp/IAD-gaussian-effect/
 
 # run
 python run_evaluation.py

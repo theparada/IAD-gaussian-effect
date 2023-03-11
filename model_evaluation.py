@@ -114,17 +114,17 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, use_EPiC=False, gaus
     # count number of inputs
     # and prepare Dataset
     if use_EPiC:
-        input_number = len(X_train[0,0])
+        input_number = len(X_test[0,0])
         test_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_test, y_test)
         db_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_db, y_db)
     else:
-        input_number = len(X_train[0])
+        input_number = len(X_test[0])
         test_data = data_process.MakeASet(X_test, y_test)
         db_data = data_process.MakeASet(X_db, y_db)
     
     # make DataLoader
     test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
-    db_loader = DataLoader(dataset=db_data, batch_size=batch_size, shuffle=True)
+    db_loader = DataLoader(dataset=db_data, batch_size=batch_size, shuffle=False)
 
     tprs_list = []
     fprs_list = []
@@ -136,8 +136,6 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, use_EPiC=False, gaus
     auc_median = 0.
     val_spread = 0.
     test_spread = 0.
-
-    input_number = len(X_test[0])
 
     # 10 models
     for model_num in range(10):
@@ -208,8 +206,9 @@ def evaluate_tpr_fpr(device, dir=None, l1=64, l2=64, l3=64, use_EPiC=False, gaus
         mean_loss.append(np.mean(collect_loss))
         collect_pred = np.vstack(collect_pred)
         collect_pred = np.resize(collect_pred, (10, len(y_test), 1))
+        for i in range(10):
+            print(np.unique(collect_pred[i]))
         collect_pred = np.mean(collect_pred, axis = 0)
-        print(np.unique(collect_pred))
 
         fpr, tpr, _ = roc_curve(y_test.cpu(), collect_pred)
                     

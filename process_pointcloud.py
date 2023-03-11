@@ -73,6 +73,7 @@ def combine_data(data1, data2):
     label = np.concatenate((y1, y2), axis=0)
     return features, label
 
+# embed data vs bg labels
 def data_label(y, is_data=True):
     y = np.resize(y, (len(y), 1))
     if is_data:
@@ -144,16 +145,15 @@ y_val_bg = data_label(y_val_bg, is_data=False)
 # ready to use datasets
 X_train = np.concatenate((X_train_data, X_train_bg), axis=0)
 X_val = np.concatenate((X_val_data, X_val_bg), axis=0)
-X_test = np.concatenate((X_test_sig, X_test_bg, extra2), axis=0)
 
 y_train = np.concatenate((y_train_data, y_train_bg), axis=0)
 y_val = np.concatenate((y_val_data, y_val_bg), axis=0)
-y_test = np.concatenate((y_test_sig, y_test_bg, label_extra2), axis=0)
-
-print(np.shape(X_train))
-print(np.shape(y_train))
 
 if args.testset:
+    X_test = np.concatenate((X_test_sig, X_test_bg, extra2), axis=0)
+    y_test = np.concatenate((y_test_sig, y_test_bg, label_extra2), axis=0)
+    X_test = X_test[:360000]
+    y_test = y_test[:360000]
     np.save(os.path.join('data/X_files_EPiC/X_test.npy'), X_test)
     np.save(os.path.join('data/X_files_EPiC/y_test.npy'), y_test)
     print("Testset is generated.")

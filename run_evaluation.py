@@ -51,8 +51,8 @@ colors = cm.viridis(np.linspace(0., 0.95, len(methods)))
 
 plt.figure(figsize=(8, 6))
 
-model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, label = "Baseline", color = "black")
-model_evaluation.evaluate_tpr_fpr(device,"EPiC/", gauss_num = 0, use_EPiC=True, label = "EPiC", color = "green")
+model_evaluation.evaluate_tpr_fpr(device,"baseline_signal_vs_bg/", gauss_num = 0, signal_vs_bg=True, label = "Fully supervised", color = "black")
+model_evaluation.evaluate_tpr_fpr(device,"EPiC_signal_vs_bg/", gauss_num = 0, use_EPiC=True, signal_vs_bg=True, label = "EPiC fully supervised", with_random=True, color = "green")
 
 # model_evaluation.evaluate_tpr_fpr(device, "default_signal_vs_bg_hingeloss/", gauss_num=0, signal_vs_bg=True, hingeloss=True, label="0G fully supervised", color = "black")
 # model_evaluation.evaluate_tpr_fpr(device, "2G_signal_vs_bg_hingeloss/", gauss_num=2, hingeloss=True, signal_vs_bg=True, label="2G fully supervised", color = "orange")
