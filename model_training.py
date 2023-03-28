@@ -104,8 +104,8 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         # loss_fn = torch.nn.BCEWithLogitsLoss()
     # define X, y
     if phi:
-        X_train = torch.from_numpy(X_train[:, :5]).float().to(device)
-        X_val = torch.from_numpy(X_val[:, :5]).float().to(device)
+        X_train = torch.from_numpy(X_train).float().to(device)
+        X_val = torch.from_numpy(X_val).float().to(device)
     elif uniform_num>0:
         X_train = torch.from_numpy(X_train[:, :4 + uniform_num]).float().to(device)
         X_val = torch.from_numpy(X_val[:, :4 + uniform_num]).float().to(device)
@@ -359,7 +359,7 @@ def train_per_batch(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 6
             plt.xlabel("Change of Validation Loss")
             plt.ylabel("Batches")
             plt.yscale('log')
-            plt.savefig("plots/loss_vs_batch_"+str(gauss_num)+"G.pdf", bbox_inches="tight")
+            plt.savefig("plots/results/loss_vs_batch_"+str(gauss_num)+"G.pdf", bbox_inches="tight")
         plt.close()
 
 def train_each_model(save_dir, device, pre_X_train, X_val, y_train, y_val, model_nums, l1 = 64, l2 = 64, l3 = 64, morelayers=False, dropout=False, hingeloss=False, use_SGD = False, momentum=0, num_model = 10, signal_vs_bg=False, weight_seed=False, phi=False, data_reduc=1.0, uniform_num=0, gauss_num=0, weight_decay=0., learning_rate=1e-3, epochs=100, batch_size=128):

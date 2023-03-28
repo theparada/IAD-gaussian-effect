@@ -17,6 +17,8 @@ parser.add_argument("--uniform", type=int, default=0,
                     help="number of uniform input")
 parser.add_argument("--signal_vs_bg", action="store_true", default=False,
                     help="train over signal vs background")
+parser.add_argument("--phi", action="store_true", default=False,
+                    help="for naming dataset with phi")
 parser.add_argument("--testset", action="store_true", default=False,
                     help="make test set: all models are evaluated on the same test set")
 args = parser.parse_args()
@@ -27,20 +29,28 @@ data_test = data_process.data_loader(args.input_dir)
 
 X_train, X_val, X_test, y_train, y_val, y_test = data_process.data_prep(data_train, data_val, data_test, gauss_num=args.gaussian, uniform_num=args.uniform)
 
+# additional name
+if args.uniform>0:
+    addname = "_uni"
+elif args.phi:
+    addname = "_phi"
+else:
+    addname = ""
+
 if args.testset:
-    np.save(os.path.join('data/X_files/X_test.npy'), X_test)
-    np.save(os.path.join('data/X_files/y_test.npy'), y_test)
+    np.save(os.path.join('data/X_files/X_test'+ addname +'.npy'), X_test)
+    np.save(os.path.join('data/X_files/y_test'+ addname +'.npy'), y_test)
     print("Testset is generated.")
 else:
     if args.signal_vs_bg:
-        np.save(os.path.join('data/X_files/X_train_sb'+args.S_over_B+'.npy'), X_train)
-        np.save(os.path.join('data/X_files/X_val_sb'+args.S_over_B+'.npy'), X_val)
-        np.save(os.path.join('data/X_files/y_train_sb'+args.S_over_B+'.npy'), y_train)
-        np.save(os.path.join('data/X_files/y_val_sb'+args.S_over_B+'.npy'), y_val)
+        np.save(os.path.join('data/X_files/X_train_sb'+addname+args.S_over_B+'.npy'), X_train)
+        np.save(os.path.join('data/X_files/X_val_sb'+addname+args.S_over_B+'.npy'), X_val)
+        np.save(os.path.join('data/X_files/y_train_sb'+addname+args.S_over_B+'.npy'), y_train)
+        np.save(os.path.join('data/X_files/y_val_sb'+addname+args.S_over_B+'.npy'), y_val)
         print("X_files (sb) are saved.")
     else:
-        np.save(os.path.join('data/X_files/X_train'+args.S_over_B+'.npy'), X_train)
-        np.save(os.path.join('data/X_files/X_val'+args.S_over_B+'.npy'), X_val)
-        np.save(os.path.join('data/X_files/y_train'+args.S_over_B+'.npy'), y_train)
-        np.save(os.path.join('data/X_files/y_val'+args.S_over_B+'.npy'), y_val)
+        np.save(os.path.join('data/X_files/X_train'+addname+args.S_over_B+'.npy'), X_train)
+        np.save(os.path.join('data/X_files/X_val'+addname+args.S_over_B+'.npy'), X_val)
+        np.save(os.path.join('data/X_files/y_train'+addname+args.S_over_B+'.npy'), y_train)
+        np.save(os.path.join('data/X_files/y_val'+addname+args.S_over_B+'.npy'), y_val)
         print("X_files are saved.")

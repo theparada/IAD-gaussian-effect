@@ -1,7 +1,7 @@
 import pandas as pd
-# import vector
+import vector
 import numpy as np
-# import awkward as ak
+import awkward as ak
 import os
 from os.path import join
 import argparse
@@ -14,7 +14,7 @@ parser.add_argument("--S_over_B", type=float, default=0.006361658645922605,
                     help="Signal over background ratio in the signal region.")
 parser.add_argument("--seed", type=int, default=1,
                     help="random seed for the mixing")
-parser.add_argument("--outdir", type=str, default="vanilla_data/",
+parser.add_argument("--outdir", type=str, default="data/vanilla_data/",
                     help="output directory")
 args = parser.parse_args()
 
@@ -44,41 +44,41 @@ tau21_extrabkg1 = np.array(features_extrabkg1[['tau2j1','tau2j2']])/(1e-5+np.arr
 mj1mj2_extrabkg2 = np.array(features_extrabkg2[['mj1','mj2']])
 tau21_extrabkg2 = np.array(features_extrabkg2[['tau2j1','tau2j2']])/(1e-5+np.array(features_extrabkg2[['tau1j1','tau1j2']]))
 
-# # make 4-momentum to find phi
-# pj1_bg = np.array(features_bg[['pxj1','pyj1','pzj1','mj1']])
-# pj1_sig = np.array(features_sig[['pxj1','pyj1','pzj1','mj1']])
-# pj1_extrabkg1 = np.array(features_extrabkg1[['pxj1','pyj1','pzj1','mj1']])
-# pj1_extrabkg2 = np.array(features_extrabkg2[['pxj1','pyj1','pzj1','mj1']])
+# make 4-momentum to find phi
+pj1_bg = np.array(features_bg[['pxj1','pyj1','pzj1','mj1']])
+pj1_sig = np.array(features_sig[['pxj1','pyj1','pzj1','mj1']])
+pj1_extrabkg1 = np.array(features_extrabkg1[['pxj1','pyj1','pzj1','mj1']])
+pj1_extrabkg2 = np.array(features_extrabkg2[['pxj1','pyj1','pzj1','mj1']])
 
-# pj1_sig_vec = vector.arr({
-# 	"px": pj1_sig[:,0],
-# 	"py": pj1_sig[:,1],
-# 	"pz": pj1_sig[:,2],
-# 	"M": pj1_sig[:,3]	
-# })
-# pj1_bg_vec = vector.arr({
-# 	"px": pj1_bg[:,0],
-# 	"py": pj1_bg[:,1],
-# 	"pz": pj1_bg[:,2],
-# 	"M": pj1_bg[:,3]	
-# })
-# pj1_extrabg1_vec = vector.arr({
-# 	"px": pj1_extrabkg1[:,0],
-# 	"py": pj1_extrabkg1[:,1],
-# 	"pz": pj1_extrabkg1[:,2],
-# 	"M": pj1_extrabkg1[:,3]	
-# })
-# pj1_extrabg2_vec = vector.arr({
-# 	"px": pj1_extrabkg2[:,0],
-# 	"py": pj1_extrabkg2[:,1],
-# 	"pz": pj1_extrabkg2[:,2],
-# 	"M": pj1_extrabkg2[:,3]	
-# })
+pj1_sig_vec = vector.arr({
+	"px": pj1_sig[:,0],
+	"py": pj1_sig[:,1],
+	"pz": pj1_sig[:,2],
+	"M": pj1_sig[:,3]	
+})
+pj1_bg_vec = vector.arr({
+	"px": pj1_bg[:,0],
+	"py": pj1_bg[:,1],
+	"pz": pj1_bg[:,2],
+	"M": pj1_bg[:,3]	
+})
+pj1_extrabg1_vec = vector.arr({
+	"px": pj1_extrabkg1[:,0],
+	"py": pj1_extrabkg1[:,1],
+	"pz": pj1_extrabkg1[:,2],
+	"M": pj1_extrabkg1[:,3]	
+})
+pj1_extrabg2_vec = vector.arr({
+	"px": pj1_extrabkg2[:,0],
+	"py": pj1_extrabkg2[:,1],
+	"pz": pj1_extrabkg2[:,2],
+	"M": pj1_extrabkg2[:,3]	
+})
 
-# phi_j1_sig = ak.to_numpy(pj1_sig_vec.phi)
-# phi_j1_bg = ak.to_numpy(pj1_bg_vec.phi)
-# phi_j1_extrabg1 = ak.to_numpy(pj1_extrabg1_vec.phi)
-# phi_j1_extrabg2 = ak.to_numpy(pj1_extrabg2_vec.phi)
+phi_j1_sig = ak.to_numpy(pj1_sig_vec.phi)
+phi_j1_bg = ak.to_numpy(pj1_bg_vec.phi)
+phi_j1_extrabg1 = ak.to_numpy(pj1_extrabg1_vec.phi)
+phi_j1_extrabg2 = ak.to_numpy(pj1_extrabg2_vec.phi)
 
 # Sorting of mj1 and mj2:
 # Identifies which column has the minimum of mj1 and mj2, and sorts it so the new array mjmin contains the 
@@ -130,7 +130,7 @@ dataset_bg = np.dstack((
 	(mjmax_bg-mjmin_bg)/1000, 
 	tau21min_bg, 
 	tau21max_bg, 
-	# phi_j1_bg, 
+	phi_j1_bg, 
 	np.zeros(len(mjj_bg))))[0]
 dataset_sig = np.dstack((
 	mjj_sig/1000, 
@@ -138,7 +138,7 @@ dataset_sig = np.dstack((
 	(mjmax_sig-mjmin_sig)/1000, 
 	tau21min_sig, 
 	tau21max_sig, 
-	# phi_j1_sig, 
+	phi_j1_sig, 
 	np.ones(len(mjj_sig))))[0]
 dataset_extrabkg1 = np.dstack((
 	mjj_extrabkg1/1000, 
@@ -146,7 +146,7 @@ dataset_extrabkg1 = np.dstack((
 	(mjmax_extrabkg1-mjmin_extrabkg1)/1000, 
 	tau21min_extrabkg1, 
 	tau21max_extrabkg1, 
-	# phi_j1_extrabg1, 
+	phi_j1_extrabg1, 
 	np.zeros(len(mjj_extrabkg1))))[0]
 dataset_extrabkg2 = np.dstack((
 	mjj_extrabkg2/1000, 
@@ -154,7 +154,7 @@ dataset_extrabkg2 = np.dstack((
 	(mjmax_extrabkg2-mjmin_extrabkg2)/1000, 
 	tau21min_extrabkg2, 
 	tau21max_extrabkg2, 
-	# phi_j1_extrabg2, 
+	phi_j1_extrabg2, 
 	np.zeros(len(mjj_extrabkg2))))[0]
 
 
