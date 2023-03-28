@@ -37,11 +37,10 @@ colors = cm.viridis(np.linspace(0., 0.95, 11))
 
 plt.figure(figsize=(8, 6))
 
-model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, signal_vs_bg=False, label = "baseline", color = colors[0])
+# model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, signal_vs_bg=False, label = "baseline", color = colors[0])
 # model_evaluation.evaluate_tpr_fpr(device,"2G/", gauss_num = 2, signal_vs_bg=False, label = "2G", color = colors[3])
 # model_evaluation.evaluate_tpr_fpr(device,"0G_dropout/", gauss_num = 0, dropout=True, signal_vs_bg=False, label = "0G dropout", color = colors[6])
 # model_evaluation.evaluate_tpr_fpr(device,"2G_dropout/", gauss_num = 2, dropout=True, signal_vs_bg=False, label = "2G dropout", color = colors[9], with_random=True)
-
 
 # model_evaluation.evaluate_tpr_fpr(device,"0G_sgd/", gauss_num = 0, signal_vs_bg=False, label = "SGD", color = colors[2])
 # model_evaluation.evaluate_tpr_fpr(device,"0G_sgd_momentum05/", gauss_num = 0, signal_vs_bg=False, label = "SGD momentum = 0.5", color = colors[4])
@@ -52,10 +51,10 @@ model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, signal_vs_b
 # model_evaluation.evaluate_tpr_fpr(device,"1G_tune/", l1=64, l2=32, l3=64, gauss_num = 1, signal_vs_bg=False, label = "1G tune", color = colors[8])
 # model_evaluation.evaluate_tpr_fpr(device,"2G_tune/", l1=4, l2=153, l3=150, gauss_num = 2, signal_vs_bg=False, label = "2G tune", color = colors[10], with_random=True)
 
-model_evaluation.evaluate_tpr_fpr(device,"0Gallhyperparam/", l1=512, l2=512, l3=512, gauss_num = 0, signal_vs_bg=False, label = "0G 512 nodes, batch 16, 2e-3 lr", color = colors[0])
-model_evaluation.evaluate_tpr_fpr(device,"0G_batch16_lr2e-3/", gauss_num = 0, signal_vs_bg=False, label = "0G batch 16, 2e-3 lr", color = colors[3])
-model_evaluation.evaluate_tpr_fpr(device,"0G_batch16_nodes512/", l1=512, l2=512, l3=512, gauss_num = 0, signal_vs_bg=False, label = "0G 512 nodes, batch 16", color = colors[6])
-model_evaluation.evaluate_tpr_fpr(device,"0Gnodes512lr2e-3/", l1=512, l2=512, l3=512, gauss_num = 0, signal_vs_bg=False, label = "0G 512 nodes, 2e-3 lr", color = colors[8], with_random=True)
+# model_evaluation.evaluate_tpr_fpr(device,"0Gallhyperparam/", l1=512, l2=512, l3=512, gauss_num = 0, signal_vs_bg=False, label = "0G 512 nodes, batch 16, 2e-3 lr", color = colors[0])
+# model_evaluation.evaluate_tpr_fpr(device,"0G_batch16_lr2e-3/", gauss_num = 0, signal_vs_bg=False, label = "0G batch 16, 2e-3 lr", color = colors[3])
+# model_evaluation.evaluate_tpr_fpr(device,"0G_batch16_nodes512/", l1=512, l2=512, l3=512, gauss_num = 0, signal_vs_bg=False, label = "0G 512 nodes, batch 16", color = colors[6])
+# model_evaluation.evaluate_tpr_fpr(device,"0Gnodes512lr2e-3/", l1=512, l2=512, l3=512, gauss_num = 0, signal_vs_bg=False, label = "0G 512 nodes, 2e-3 lr", color = colors[8], with_random=True)
 # model_evaluation.evaluate_tpr_fpr(device,"2Gnodes512lr2e-3/", l1=512, l2=512, l3=512, gauss_num = 2, signal_vs_bg=False, label = "2G 512 nodes 2e-3 lr", color = colors[9], with_random=True)
 
 # # model_evaluation.evaluate_tpr_fpr(device,"0G_hingeloss/", gauss_num = 0, hingeloss=True, signal_vs_bg=False, label = "Hinge loss", color = colors[5], with_random=True)
@@ -64,6 +63,9 @@ model_evaluation.evaluate_tpr_fpr(device,"0Gnodes512lr2e-3/", l1=512, l2=512, l3
 # model_evaluation.evaluate_tpr_fpr(device,"1U/", uniform_num=1, signal_vs_bg=False, label = "1U", with_random=True, color = colors[9])
 
 # model_evaluation.evaluate_tpr_fpr(device,"EPiC/", gauss_num = 0, use_EPiC=True, signal_vs_bg=False, label = "EPiC", with_random=True, color = "green")
+model_evaluation.evaluate_tpr_fpr_single_epoch(device,"EPiC_signal_vs_bg/", epoch = -1, use_EPiC=True, signal_vs_bg=True, label = "EPiC min epoch", color = "black")
+model_evaluation.evaluate_tpr_fpr_single_epoch(device,"EPiC_signal_vs_bg/", epoch = 40, use_EPiC=True, signal_vs_bg=True, label = "EPiC 40th epoch", color = "maroon")
+model_evaluation.evaluate_tpr_fpr_single_epoch(device,"EPiC_signal_vs_bg/", epoch = 149, use_EPiC=True, signal_vs_bg=True, label = "EPiC last epoch", color = "green", with_random=True)
 
 # count = 0
 # for method, node in methods:
@@ -80,7 +82,7 @@ model_evaluation.evaluate_tpr_fpr(device,"0Gnodes512lr2e-3/", l1=512, l2=512, l3
 #     model_evaluation.evaluate_tpr_fpr(device, dir, l1=l1, l2=l2,l3=l3, gauss_num = gauss, label = str(node) + " nodes", signal_vs_bg=signal_vs_bg, color = colors[count], batch_size=0, with_random=with_random)
 #     count += 1
 plt.subplots_adjust(right=2.0)
-plt.savefig("plots/results/roc_sic_0Gcombo.pdf", bbox_inches="tight")
+plt.savefig("plots/results/test.pdf", bbox_inches="tight")
 plt.close()
 
 # different S/B

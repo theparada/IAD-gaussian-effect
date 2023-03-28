@@ -358,63 +358,39 @@ def evaluate_tpr_fpr_single_epoch(device, dir=None, l1=64, l2=64, l3=64, epoch=-
         tpr = []
         fpr =[]
         collect_pred = []
-        collect_loss = []
 
+        # choose epoch
         val_losses = np.load("saved_model/"+dir+"val_losses_model_"+str(model_num+1)+".npy")
-
-        model_number = choose_ten_best(val_losses)
+        if epoch==-1:
+            ep = np.argmin(val_losses)
+        elif epoch==-2:
+            ep = np.argmax(val_losses)
+        else:
+            ep = epoch
 
         # collect val values for median on legends
-        val_list = [] # for mean of val losses to pass to collect_val
-        for val in model_number:
-            val_list.append(val_losses[val])
+        collect_val.append(val_losses[ep])
 
-        collect_val.append(np.mean(val_list))
+        model.load_state_dict(torch.load("saved_model/"+dir+"saved_training_model"+str(model_num+1)+'_epoch'+str(ep+1)+".pt"))
 
-        # size_test = len(test_loader.dataset) 
-        # n_batch_test = math.ceil(size_test/batch_size)
-        # size_db = len(db_loader.dataset) 
-        # n_batch_db = math.ceil(size_db/batch_size)
+        # Evaluation
+        model.eval()
+        test_pred = []
+        with torch.no_grad():
+            # signal vs bg
+            for batch, (X, y) in enumerate(test_loader):
+                if use_EPiC:
+                    mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
+                    mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
+                    test_pred = model(X, mask)
+                else: 
+                    test_pred = model(X)
+                collect_pred.append(test_pred.cpu().numpy())
 
-        # 10 epochs
-        for i in model_number:
-            model.load_state_dict(torch.load("saved_model/"+dir+"saved_training_model"+str(model_num+1)+'_epoch'+str(i+1)+".pt"))
-
-            # Evaluation
-            model.eval()
-            test_pred = []
-            test_loss, test_loss_mean = 0, 0
-            with torch.no_grad():
-                # signal vs bg
-                for batch, (X, y) in enumerate(test_loader):
-                    if use_EPiC:
-                        mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
-                        mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
-                        test_pred = model(X, mask)
-                    else: 
-                        test_pred = model(X)
-                    collect_pred.append(test_pred.cpu().numpy())
-
-                # data vs bg
-                # for batch, (X, y) in enumerate(db_loader):
-                #     if use_EPiC:
-                #         mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
-                #         mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
-                #         db_pred = model(X, mask)
-                #     else: 
-                #         db_pred = model(X)
-                #     test_loss = loss_fn(db_pred, y)
-                #     test_loss_mean += test_loss.mean().item()
-
-            # collect_loss.append(test_loss_mean/n_batch_db)
-        
-        # mean_loss.append(np.mean(collect_loss))
         collect_pred = np.vstack(collect_pred)
-        collect_pred = np.resize(collect_pred, (10, len(y_test), 1))
-        collect_pred = np.mean(collect_pred, axis = 0)
 
         fpr, tpr, _ = roc_curve(y_test.cpu(), collect_pred)
-                    
+                
         roc_auc = auc(fpr, tpr)
         auc_list.append(roc_auc)
         tprs_list.append(tpr)
@@ -424,12 +400,8 @@ def evaluate_tpr_fpr_single_epoch(device, dir=None, l1=64, l2=64, l3=64, epoch=-
         tprs_list, fprs_list, resolution=1000, fpr_cutoff=fpr_cutoff)  # 0.0000326797385620915032679738562091503267973856209150326797385620
     auc_median = np.median(auc_list)
     val_median = np.median(collect_val)
-    # val_median = normalize_loss(np.median(collect_val), signal_vs_bg=signal_vs_bg)
-    # test_median = normalize_loss(np.median(mean_loss), signal_vs_bg=signal_vs_bg)
     val_spread = np.nanquantile(collect_val, 0.84) - np.nanquantile(collect_val, 0.16)
     val_spread = (val_spread/2)
-    # test_spread = np.nanquantile(mean_loss, 0.84) - np.nanquantile(mean_loss, 0.16)
-    # test_spread = (test_spread/2)*1e3
 
     # plot
     # random
@@ -454,7 +426,7 @@ def evaluate_tpr_fpr_single_epoch(device, dir=None, l1=64, l2=64, l3=64, epoch=-
 
     # SIC
     plt.subplot(1, 2, 2)
-    plt.plot(tpr_manual, sic_median, color = color, linestyle = linestyle, label = r"" + label + ', val loss: %0.5f' % val_median + '$\pm$%0.5f' % val_spread) #+ ', test loss: %0.2f' % test_median + '$\pm$%0.2f' % test_spread)
+    plt.plot(tpr_manual, sic_median, color = color, linestyle = linestyle, label = r"" + label + ', val loss: %0.5f' % val_median + '$\pm$%0.5f' % val_spread)
     plt.fill_between(tpr_manual, sic_std[0], sic_std[1], color=color, alpha=0.3)
     if with_random:
         plt.plot(tpr_random, sic_random, 'k:', label="Random")
