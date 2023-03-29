@@ -7,11 +7,10 @@ def data_normalize(x, pre_x):
     print("Normalized X")
     return x
 
-def data_normalize_EPiC(x, pre_x):
+def data_normalize_EPiC(x, x_mean, x_std):
     for i in range(len(x[0,0])):
-        x_mean = np.mean(np.ndarray.flatten(pre_x[:,:,i]))
-        x_std = np.std(np.ndarray.flatten(pre_x[:,:,i]))
-        x[:,:,i] = (x[:,:,i] - x_mean)/x_std
+        if i != 3:
+            x[...,i] = (x[...,i] - x_mean[i])/x_std[i]
     return x
 
 def normalize_datasets(x1, x2, pre_x):

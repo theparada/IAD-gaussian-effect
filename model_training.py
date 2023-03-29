@@ -82,9 +82,11 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
     X_val, y_val = data_reduction(X_val, y_val, data_reduc=1.0, bg_vs_bg=bg_vs_bg, signal_vs_bg=signal_vs_bg)
     # y_train is now 190k*1 matrix 
     # normalize datasets here because raw X_train is needed in the evaluation 
+    # if use_EPiC:
+    #     X_val = data_process.data_normalize_EPiC(X_val, pre_X_train)
+    #     X_train = data_process.data_normalize_EPiC(pre_X_train, pre_X_train)
     if use_EPiC:
-        X_val = data_process.data_normalize_EPiC(X_val, pre_X_train)
-        X_train = data_process.data_normalize_EPiC(pre_X_train, pre_X_train)
+        X_train = pre_X_train
     else:    
         X_val, X_train = data_process.normalize_datasets(X_val, pre_X_train, pre_X_train)
     print("X_train and X_val are normalized.")
@@ -125,6 +127,7 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
         input_number = len(X_train[0,0])
         train_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_train, y_train)
         val_data = pointcloud_loader.PointCloudDataset_ZeroPadded(X_val, y_val)
+        mean, std = train_data.get_means_stds()
     else:
         input_number = len(X_train[0])
         train_data = data_process.MakeASet(X_train, y_train)
@@ -179,6 +182,7 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
                 if use_EPiC:
                     mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
                     mask = mask.reshape(mask.shape[0], mask.shape[1], 1)   # [B,N,1] 
+                    X = data_process.data_normalize_EPiC(X, mean, std)
                     pred = model(X, mask)
                 else:
                     pred = model(X)
@@ -202,6 +206,7 @@ def train_model(save_dir, device, pre_X_train, X_val, y_train, y_val, l1 = 64, l
                     if use_EPiC:
                         mask = (X[...,0] != 0.)    # [B,N]    # zero padded values = False,  non padded values = True
                         mask = mask.reshape(mask.shape[0], mask.shape[1], 1)
+                        X = data_process.data_normalize_EPiC(X, mean, std)
                         val_pred = model(X, mask)
                     else: 
                         val_pred = model(X)
