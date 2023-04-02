@@ -28,7 +28,7 @@ def plot_loss(dir, label, val_color, train_color, with_train = False, epoch=100)
         train_matrix, train_median, train_std = make_loss(dir, for_train=True)
         plt.title("Loss")
 
-        plt.plot(range(epoch), train_median[:epoch], color = train_color, label = label)
+        plt.plot(range(epoch), train_median[:epoch], color = train_color, label = "Training loss")
         plt.fill_between(range(epoch), train_std[0][:epoch], train_std[1][:epoch], color = train_color, alpha=0.3)
     else:
         # plt.title("Validation Loss")
@@ -42,7 +42,7 @@ def plot_loss(dir, label, val_color, train_color, with_train = False, epoch=100)
     plt.yticks(fontsize=12)
     plt.xlabel('epoch', fontsize=12)
     # plt.xlim([0, 25])
-    # plt.ylim([0.6925, 0.695])
+    plt.ylim([0.305425, 0.30548])
     plt.ylabel('Binary Cross Entropy Loss', fontsize=12)
     plt.legend(loc="upper left")
 
@@ -68,7 +68,7 @@ plt.figure(figsize=(11, 7))
 # for i in range(len(methods)):
 #     dir = methods[i] + "/"
 #     plot_loss(dir=dir, label=methods[i], val_color=colors[i], train_color="m", epoch=50)
-plot_loss(dir="0G_hingeloss/", label="Hinge loss", val_color="green", train_color="m", epoch=100)
+plot_loss(dir="0G_hingeloss/", label="Validation loss", val_color="green", train_color="m", epoch=100, with_train=True)
 # plot_loss(dir="EPiC/", label="EPiC data vs bg", val_color="green", train_color="m", epoch=100)
 plt.savefig("plots/results/loss_hinge.pdf")
 plt.close()

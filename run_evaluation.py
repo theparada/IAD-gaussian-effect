@@ -37,14 +37,15 @@ colors = cm.viridis(np.linspace(0., 0.95, 11))
 
 plt.figure(figsize=(8, 6))
 
-model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, signal_vs_bg=False, label = "baseline", color = colors[0])
-# model_evaluation.evaluate_tpr_fpr(device,"2G/", gauss_num = 2, signal_vs_bg=False, label = "2G", color = colors[3])
-# model_evaluation.evaluate_tpr_fpr(device,"0G_dropout/", gauss_num = 0, dropout=True, signal_vs_bg=False, label = "0G dropout", color = colors[6])
-# model_evaluation.evaluate_tpr_fpr(device,"2G_dropout/", gauss_num = 2, dropout=True, signal_vs_bg=False, label = "2G dropout", color = colors[9], with_random=True)
+model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, signal_vs_bg=False, label = "baseline", batch_size=0, color = colors[0])
+# model_evaluation.evaluate_tpr_fpr(device,"baseline_signal_vs_bg/", gauss_num = 0, signal_vs_bg=True, label = "baseline", batch_size=0, color = colors[0])
+# model_evaluation.evaluate_tpr_fpr(device,"2G/", gauss_num = 2, signal_vs_bg=False, label = "2G", batch_size=0, color = colors[3])
+# model_evaluation.evaluate_tpr_fpr(device,"0G_dropout/", gauss_num = 0, dropout=True, signal_vs_bg=False, label = "0G dropout", batch_size=0, color = colors[6])
+# model_evaluation.evaluate_tpr_fpr(device,"2G_dropout/", gauss_num = 2, dropout=True, signal_vs_bg=False, label = "2G dropout", batch_size=0, color = colors[9], with_random=True)
 
 # model_evaluation.evaluate_tpr_fpr(device,"0G_sgd/", gauss_num = 0, signal_vs_bg=False, label = "SGD", color = colors[2])
-# model_evaluation.evaluate_tpr_fpr(device,"0G_sgd_momentum05/", gauss_num = 0, signal_vs_bg=False, label = "SGD momentum = 0.5", color = colors[4])
-# model_evaluation.evaluate_tpr_fpr(device,"0G_sgd_momentum/", gauss_num = 0, signal_vs_bg=False, label = "SGD momentum = 0.9", color = colors[6], with_random=True)
+# model_evaluation.evaluate_tpr_fpr(device,"0G_sgd_momentum05/", gauss_num = 0, signal_vs_bg=False, label = "SGD, momentum = 0.5", color = colors[4])
+# model_evaluation.evaluate_tpr_fpr(device,"0G_sgd_momentum/", gauss_num = 0, signal_vs_bg=False, label = "SGD, momentum = 0.9", color = colors[6], with_random=True)
 # model_evaluation.evaluate_tpr_fpr(device,"1G/", gauss_num = 1, signal_vs_bg=False, label = "1G", color = colors[2])
 # model_evaluation.evaluate_tpr_fpr(device,"2G/", gauss_num = 2, signal_vs_bg=False, label = "2G", color = colors[4])
 # model_evaluation.evaluate_tpr_fpr(device,"0G_tune/", l1=32, l2=64, l3=16, gauss_num = 0, signal_vs_bg=False, label = "0G tune", color = colors[6])
@@ -62,7 +63,8 @@ model_evaluation.evaluate_tpr_fpr(device,"baseline/", gauss_num = 0, signal_vs_b
 # model_evaluation.evaluate_tpr_fpr(device,"phij1/", phi=True, signal_vs_bg=False, label = "$\\phi_{J_1}$", color = colors[6])
 # model_evaluation.evaluate_tpr_fpr(device,"1U/", uniform_num=1, signal_vs_bg=False, label = "1U", with_random=True, color = colors[9])
 
-model_evaluation.evaluate_tpr_fpr(device,"EPiC/", gauss_num = 0, use_EPiC=True, signal_vs_bg=False, label = "EPiC", color = "green", with_random=True)
+# model_evaluation.evaluate_testloss(device,"EPiC/", gauss_num = 0, use_EPiC=True, signal_vs_bg=False, label = "EPiC", color = "green")
+# model_evaluation.evaluate_tpr_fpr(device,"EPiC/", gauss_num = 0, use_EPiC=True, signal_vs_bg=False, label = "EPiC", color = "green", with_random=True)
 # model_evaluation.evaluate_tpr_fpr_single_model(device,"EPiC/", epoch = -1, use_EPiC=True, signal_vs_bg=False, label = "EPiC", color = "green")
 # model_evaluation.evaluate_tpr_fpr_single_epoch(device,"EPiC_signal_vs_bg/", epoch = 40, use_EPiC=True, signal_vs_bg=True, label = "EPiC 40th epoch", color = "maroon")
 # model_evaluation.evaluate_tpr_fpr_single_epoch(device,"EPiC_signal_vs_bg/", epoch = 149, use_EPiC=True, signal_vs_bg=True, label = "EPiC last epoch", color = "green", with_random=True)
@@ -82,7 +84,7 @@ model_evaluation.evaluate_tpr_fpr(device,"EPiC/", gauss_num = 0, use_EPiC=True, 
 #     model_evaluation.evaluate_tpr_fpr(device, dir, l1=l1, l2=l2,l3=l3, gauss_num = gauss, label = str(node) + " nodes", signal_vs_bg=signal_vs_bg, color = colors[count], batch_size=0, with_random=with_random)
 #     count += 1
 plt.subplots_adjust(right=2.0)
-plt.savefig("plots/results/roc_sic_epic.pdf", bbox_inches="tight")
+plt.savefig("plots/results/roc_sic_sgd.pdf", bbox_inches="tight")
 plt.close()
 
 # different S/B

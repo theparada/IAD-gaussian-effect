@@ -89,7 +89,7 @@ extra1, label_extra1 = prepare_jets(ex_bg1)
 extra2, label_extra2 = prepare_jets(ex_bg2)
 
 # determine sig in S/B
-n_sig = int(args.S_over_B*len(sig))
+n_sig = int(args.S_over_B*len(bkg))
 n_sig_test = 20000
 
 # split training and validation sets
